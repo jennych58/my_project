@@ -1,0 +1,262 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Total Three Countries</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link href="assets/style.css" rel="stylesheet" />
+	<script src="assets/jquery-3.1.1.min.js"></script>
+	<script src="assets/moment.min.js"></script>
+	<script src="assets/d3.min.js"></script>
+	<link href="assets/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/animate.css" rel="stylesheet">
+    <link href="assets/stylesheet-nf.css" rel="stylesheet" type="text/css">
+    <script src="assets/amcharts.js" type="text/javascript"></script>
+	<script src="assets/serial.js" type="text/javascript"></script>
+	<script src="assets/export.min.js" type="text/javascript"></script>
+	<link href="assets/export.css" rel="stylesheet" />
+	<script src="assets/light.js" type="text/javascript"></script>
+</head>
+<body>
+
+	<div class="row">
+		<div class="col-md-12">
+			<ul>
+				<li>
+					<span class="title">
+						2008 – Present world Earthquake occurrences
+					</span>
+				</li>
+				<li><a href="javacript:;">Home</a></li>
+				<li><a  href="animated-map.html">Animated Map</a></li>
+				<li><a href="overview-map.html">Overview Map</a></li>
+				<li><a class="active" href="top-three-countries.html">Top Three Countries?</a></li>
+				<li><a href="#">About</a></li>
+			</ul>
+		</div>
+	</div>
+   
+     <div class="row">
+        <div class="col-md-12 panel-body  animated fadeInRight" style="margin-top:30px;">
+            <div id="earthQuake" style="width: 100%; height: 400px; background-color: #FFFFFF!important;"></div>
+        </div>
+    </div>
+   
+    <style type="text/css">
+        /* set the CSS */
+	
+		body,svg{
+	 background-color:#FFF!important;
+	}
+       
+    </style>
+
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="assets/jquery.min.js"></script>
+    <script>
+
+		 function dataGrid() {
+			return {
+				balloonText: "[[title]] of [[category]]: [[value]]% ",
+				bullet: "round",
+				id: "Jul-17",
+				title: "Month1",
+				type: "smoothedLine",
+				valueField: "column1"
+
+			}
+		}
+
+		
+        var getObject = function (obj, key, val) {
+            var objects = [];
+            for (var i in obj) {
+                if (!obj.hasOwnProperty(i)) continue;
+                if (typeof obj[i] == 'object') {
+                    objects = objects.concat(getObject(obj[i], key, val));
+                } else if (i == key && obj[key] == val) {
+                    objects.push(obj);
+                }
+            }
+            return objects;
+        }
+
+        var eq_data = [];
+        var eq_con_count = [];
+        var eq_con_year_count = [];
+        // Get the data
+        d3.csv("assets/EQ2008_2019.csv", function (error, data) {
+            
+            data.forEach(function (d) {
+                eq_data.push({ "COUNTRY": d.COUNTRY, "YEAR": d.YEAR, "MAG": d.EQ_PRIMARY });
+            });
+            //console.log(eq_data);
+
+            //unique countries
+            var country = data.map(function (obj) { return obj.COUNTRY; });
+            country = country.filter(function (v, i) { return country.indexOf(v) == i; });
+
+            var years = data.map(function (obj) { return obj.YEAR; });
+            years = years.filter(function (v, i) { return years.indexOf(v) == i; });
+
+            $.each(country, function (i, v) {
+                var a = getObject(eq_data, "COUNTRY", v);
+                eq_con_count.push({ "COUNTRY": v, "COUNT": a.length });
+                $.each(years, function (p, q) {
+                    if (a.length > 0) {
+                        var b = getObject(a, "YEAR", q);
+                        eq_con_year_count.push({ "COUNTRY": v, "YEAR": q, "COUNT": b.length });
+                    }
+                    else {
+                        eq_con_year_count.push({ "COUNTRY": v, "YEAR": q, "COUNT": 0 });
+                    }
+                });
+            });
+            //console.log(eq_con_year_count);
+            //console.log(eq_con_count);
+
+            eq_con_count = eq_con_count.sort(function (obj1, obj2) {
+                // Ascending: first age less than the previous
+                return obj2.COUNT - obj1.COUNT;
+            });
+			
+			console.log(eq_data);
+
+            eq_data = $.grep(eq_data, function (e) {
+                return (e.COUNTRY == eq_con_count[0].COUNTRY || e.COUNTRY == eq_con_count[1].COUNTRY || e.COUNTRY == eq_con_count[2].COUNTRY);
+            });
+            
+            //console.log(eq_con_count);
+            //console.log(eq_data);
+			
+			var data_loop = [];
+			var data_arr = [];
+			var data_push = [];
+			$(eq_data).each(function(i,x){
+				var data_c = x.COUNTRY + "__" + x.YEAR;
+				
+				if(jQuery.inArray( data_c, data_arr )==-1){
+					data_arr.push(data_c);
+					data_push.push(x);
+				}
+				
+				if(data_loop[data_c] == undefined){
+					data_loop[data_c] = x.MAG;
+				}else{
+					if(data_loop[data_c] < x.MAG)
+						data_loop[data_c] = x.MAG;
+				}
+			}); //LoopData Check...
+			
+			
+			$(data_arr).each(function(i,x){
+				data_push[i].MAG =data_loop[x];
+			})
+			
+			console.log(data_push);
+			eq_data = data_push;
+			
+			
+			var data_header = d3.nest()
+                                             .key(function (d) { return d.COUNTRY })
+                                             .entries(eq_data);
+
+                    console.log(data_header);
+					
+			var data_headerYears = d3.nest()
+                                             .key(function (d) { return d.YEAR })
+                                             .entries(eq_data);
+
+                    console.log(data_headerYears);
+				
+			var data_Years = [];
+			
+			
+			var data = [];
+			var categeoryData = [];
+			var categeoryHead = [];
+			var headerNamesdata = [];
+			$(data_header).each(function (i, x) {
+                        var row_data = [];
+                        var catObj = {};
+						headerNamesdata.push(x.key);
+						var obje = dataGrid();
+                                obje.title = x.key;
+                                obje.id = "Month_" + i+1;
+                                obje.valueField = "column" + (i)
+                                categeoryHead.push(obje);
+			});
+			//data_Years
+			$(data_headerYears).each(function (ii, ix) {
+				if (categeoryData[ii] == undefined)
+					categeoryData[ii] = [];
+				
+				if(categeoryData[ii]["category"] == undefined){
+					categeoryData[ii]["category"] = ix.key;
+				}
+				var data_d = [];
+				$(ix.values).each(function(iii,iix){
+					data_d[iix.COUNTRY] = iix.MAG;
+				});
+				
+				$(headerNamesdata).each(function(i,x){
+					categeoryData[ii]["column" + i] = 0;
+					if(data_d[x] != undefined){
+						categeoryData[ii]["column" + i] = data_d[x];
+					}
+				})
+			});
+                    
+				console.log(categeoryHead);
+				console.log(categeoryData);				
+					
+					 var cohortAll = AmCharts.makeChart("earthQuake",
+                   {
+                       "type": "serial",
+                       "dataProvider": categeoryData,
+                       "categoryField": "category",
+                       "startDuration": 1,
+                       "categoryAxis": {
+                           startOnAxis: false,
+                           "gridPosition": "start",
+                           labelRotation: "20",
+                           "titel": "asfdsfasdffasdfdsfsadfffasfs"
+                       },
+                       "trendLines": [],
+                       "graphs": categeoryHead,
+                       "guides": [],
+                       "valueAxes": [
+                           {
+                              
+                               "id": "ValueAxis-1",
+                               "title": "Earthquake Magnitude",
+                               "labelFunction": function (value) {
+                                   return value;
+                               }
+                           }
+                       ],
+                       "allLabels": [],
+                       "balloon": {},
+                       "legend": {
+                           "enabled": true,
+                           "useGraphSettings": true
+                       },
+                       "titles": [
+                           {
+                               "id": "Title-1",
+                               "size": 15,
+                               "text": "Top  three countries"
+                           }
+                       ]
+
+                   }
+               );
+					
+					
+            
+        });
+
+    </script>
+
+
+</body>
+</html>
