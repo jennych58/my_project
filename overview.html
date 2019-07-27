@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+
+    body {margin:0;}
+
+    ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #f3f3f3;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        border: 1px solid #e7e7e7;
+    }
+
+    li {
+        float: left;
+        border-right:1px solid #bbb;
+    }
+
+    li:last-child {
+        border-right: none;
+    }
+
+    li a {
+        display: block;
+        color: #666;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+    }
+
+    li a:hover:not(.active) {
+        background-color: #ddd;
+    }
+
+    .active {
+        color: white;
+        background-color: crimson;
+    }
+
+    * {
+      font-family: "Helvetica Neue";
+    }
+
+    p {
+      font-size: 0.85em;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: none;
+      shape-rendering: crispEdges;
+    }
+
+    .browser text {
+      text-anchor: end;
+    }
+
+    svg {
+      background: white;
+    }
+
+    .country {
+      fill: #f6f6f6;
+      stroke: #333333;
+      stroke-width: 0.5;
+    }
+
+    .tooltip {
+      position: absolute;
+      text-align: center;
+      width: 400px;
+      height: 20px;
+      padding: 2px;
+      font: 12px sans-serif;
+      background: white;
+      border: 0px;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .gtd-label {
+      font-size: 10px;
+    }
+    
+    .legendContainer{
+      
+    }
+    #legend{
+      z-index: 5;
+      position: absolute;
+      /*width: 350;
+      height: 200px;*/
+      top: 10px;
+      right: 10px;
+      border: 1px dashed #900;
+      /*background-color: #fdd;*/
+    }
+    
+    #custom-handle {
+      
+      width: 3em;
+      height: 1.6em;
+      top: 50%;
+      margin-top: -.8em;
+      text-align: center;
+      line-height: 1.6em;
+    }
+    #slider{
+      /*z-index: 10;*/
+      /*width: 300px;*/
+      /*height: 50px;*/
+      margin-top: 20px;
+    }
+    #optContainer{
+      z-index: 5;
+      position: absolute;
+      width: 350px;
+      height: 200px;
+      top: 10px;
+      left: 10px;
+      /*border: 1px dashed #900;*/
+      /*background-color: #fdd;*/
+    }
+    </style>
+  </head>
+  <body>
+    <div id="optContainer">
+      <h4> Select Country </h4>
+      <div id="dropdown"></div>
+      <div id="efects" style="display: none;">
+      <h4> Select Damages Type </h4>
+        <select>
+          <option value="7"> TOTAL DEATHS </option>
+          <option value="8"> TOTAL HOUSES DESTROYED </option>
+          <option value="9"> TOTAL HOUSES DAMAGED </option>
+          <option value="10"> TOTAL INJURIES </option>
+        </select>
+      </div>
+      <h4> Select Year </h4>
+      <div id="slider">
+        <div id="custom-handle" class="ui-slider-handle"></div>
+      </div>
+    </div>
+    <div>
+      <svg id="legend" height=300 width=200></svg>
+    </div>
+
+    
+    <div id="map"></div>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://d3js.org/topojson.v1.min.js"></script>
+    <script src="http://colorbrewer2.org/export/colorbrewer.js"></script>
+    
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <!-- <link rel="stylesheet" href="//resources/demos/style.css"> -->
+
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <!-- <li><a href="slide1.html">Animated map</a></li> -->
+      <li><a class="active" href="page2.html">Map - Where in the world (Page 2)?</a></li>
+      <li><a class="" href="page4.html">Map - Efects in the world (Page 4)?</a></li>
+      <!-- <li><a href="slide3.html">Who are they targeting?</a></li> -->
+      <!-- <li><a href="slide4.html">How do they attack?</a></li> -->
+      <li><a href="about.html">About the Visualization</a></li>
+    </ul>
+
+  </body>
+</html>
+
+
+<script>
+
+
+//filter data
+function filterJSON(json, key, value) {
+    var result = [];
+    json.forEach(function(val, idx, arr) {
+        //console.log(value);
+        if (value == 'ALL'){
+            result.push(val);
+        }
+        else if (val[key] == value) {
+            result.push(val);
+        } 
+    });
+    return result;
+}
+
+var margin = {
+        top: 50,
+        left: 50,
+        right: 50,
+        bottom: 50
+    },
+    height = 800 - margin.top - margin.bottom,
+    width = 1280 - margin.left - margin.right;
+
+var defaults = {
+    title: "",
+    field: "data",
+    country: "country",
+    colors: "RdYlGn",
+    proj: "kavrayskiy",
+    inverse: ""
+};
+
+var svg = d3.select("#map")
+    .append("svg")
+    .attr("height", height + margin.top + margin.bottom)
+    .attr("width", width + margin.right + margin.left)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// read map file and data file
+
+d3.queue()
+    .defer(d3.json, "world-countries.json")
+    .defer(d3.csv, "EQ2008_2019.csv")
+    .await(ready)
+
+// create projection (from long/lat globe to screen)
+var projection = d3.geoMercator()
+    .translate([width / 2, height / 2])
+    .scale(150) // zoom the map in or out
+
+// create a geopath (all coordinated form a shape)
+var path = d3.geoPath()
+    .projection(projection)
+
+
+// read data files
+function ready(error, data, gtd) {
+    // create the map
+    var countries = topojson.feature(data, data.objects.countries1).features;
+
+    svg.selectAll(".country")
+        .data(countries)
+        .enter().append("path")
+        .attr("class", "country")
+        .attr("d", path)
+
+    var nest = d3.nest()
+        .key(function(d) {
+            return d.COUNTRY;
+        })
+        .sortKeys(d3.ascending)
+        .entries(gtd)
+
+    // Dropdown country
+    var dropMenu = d3.select("#dropdown");    
+    
+    dropMenu.append("select")
+        .selectAll("option")
+        .data(nest)
+        .enter()
+        .append("option")
+        .attr("value", function(d) {
+            return d.key;
+        })
+        .text(function(d) {
+            return d.key;
+        })
+
+    // $('#dropdown').find('select').append(new Option('ALL', 'ALL', true, true));
+    $('#dropdown').find('select').prepend(new Option('ALL', 'ALL', true, true));
+
+    d3.select('#dropdown')
+        .on("change", function(d) {
+            var sect = $("#dropdown").find('select').prop('value');
+            // var sectEfect = $("#efects").find('select').prop('value');
+            rdata = filterJSON(gtd, 'COUNTRY', sect);
+            // console.log(rdata); TODO: make more clear by adding dummy for magnitude
+            updateMap(rdata, 2);
+        });
+    // Year Filter
+    $( function() {
+      var handle = $( "#custom-handle" );
+      $( "#slider" ).slider({
+        value:100,
+        min: 2008,
+        max: 2019,
+        step: 1,
+        create: function() {
+            handle.text( $( this ).slider( "value" ) );
+        },
+        slide: function( event, ui ) {
+          handle.text( ui.value );
+          
+          rdata = filterJSON(gtd, 'YEAR', ui.value);
+          var sect = $("#dropdown").find('select').prop('value');
+          countryFilter = filterJSON(rdata, 'COUNTRY', sect);
+          
+          // var sectEfect = $("#efects").find('select').prop('value');
+          //console.log(rdata);
+          updateMap(countryFilter, 2); // 2 is index magnitude
+        }
+      });
+    } );
+
+    // add GTD data, location based on average lat,long for events in each country
+
+    // "7" is index of column for which need to plot like Total deaths here
+    updateMap(gtd, 2); 
+}
+
+function updateMap(gtd, idx) {  
+    svg.selectAll("circle").remove();
+    svg.selectAll(".gtd-circle")
+        .data(gtd)
+        .enter().append("circle")
+        .attr("r", function(d) {
+            var dValue = d[Object.keys(d)[idx]];
+            // console.log(dValue);
+            // var size = dValue;
+            var size = 0;
+            if (dValue > 0 && dValue <= 2){
+              size = 2;
+            }
+            if (dValue > 2 && dValue <= 3){
+              size = 3;
+            }
+            if (dValue > 3 && dValue <= 4){
+              size = 4;
+            }
+            if (dValue > 4 && dValue <= 5){
+              size = 5;
+            }
+            if (dValue > 5 && dValue <= 6){
+              size = 6;
+            }
+            if (dValue > 6 && dValue <= 7){
+              size = 7;
+            }
+            if (dValue > 7 && dValue <= 8){
+              size = 8;
+            }
+            if (dValue > 8 && dValue <= 9){
+              size = 9;
+            }
+            if (dValue > 9){
+              size = 10;
+            }
+            return size;
+           
+        })
+        .attr("fill", "crimson")
+        .style("stroke", "#f6f6f6")
+        .attr("cx", function(d) {
+            var coords = projection([d.LONGITUDE, d.LATITUDE])
+            return coords[0];
+        })
+        .attr("cy", function(d) {
+            var coords = projection([d.LONGITUDE, d.LATITUDE])
+            return coords[1];
+        })
+        .on("mouseover", function() {
+            tooltip.style("display", null);
+        })
+        .on("mouseout", function() {
+            tooltip.style("display", "none");
+        })
+        .on("mousemove", function(d) {
+            var xPosition = d3.mouse(this)[0] + 5;
+            var yPosition = d3.mouse(this)[1] - 5;
+            tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+            tooltip.select("text").text("Country: " + d.COUNTRY +
+                ", Magnitude: " + d.EQ_PRIMARY + ", Place: " + d.LOCATION_NAME + ", Total Deaths: " + d.TOTAL_DEATHS);
+
+        });
+    // Add legend
+    // select the svg area
+      var legend = d3.select("#legend")
+
+      legend.append("text")
+        .attr("x", 80)
+        .attr("y", 15)
+        .attr("text-anchor", "middle")
+        .style("fill", "black")
+        .style("font-size", "1em")
+        .style("margin-top", "1em")
+        .style("margin-bottom", "1em")
+        .style("font-weight", "bold")
+        .text("Legend (Magnitude)");
+
+      // Handmade legend
+      legend.append("circle").attr("cx",20).attr("cy",35).attr("r", 2).style("fill", "crimson")
+      legend.append("text").attr("x", 40).attr("y", 35).text("2").style("font-size", "15px").attr("alignment-baseline","middle")
+      
+      legend.append("circle").attr("cx",20).attr("cy",55).attr("r", 3).style("fill", "crimson")
+      legend.append("text").attr("x", 40).attr("y", 55).text("3").style("font-size", "15px").attr("alignment-baseline","middle")
+      
+      legend.append("circle").attr("cx",20).attr("cy",80).attr("r", 4).style("fill", "crimson")
+      legend.append("text").attr("x", 40).attr("y", 80).text("4").style("font-size", "15px").attr("alignment-baseline","middle")
+      
+      legend.append("circle").attr("cx",20).attr("cy",110).attr("r", 5).style("fill", "crimson")
+      legend.append("text").attr("x", 40).attr("y", 110).text("5").style("font-size", "15px").attr("alignment-baseline","middle")
+
+      legend.append("circle").attr("cx",20).attr("cy",140).attr("r", 6).style("fill", "crimson")
+      legend.append("text").attr("x", 40).attr("y", 140).text("6").style("font-size", "15px").attr("alignment-baseline","middle")
+
+      legend.append("circle").attr("cx",20).attr("cy",170).attr("r", 7).style("fill", "crimson")
+      legend.append("text").attr("x", 40).attr("y", 170).text("7").style("font-size", "15px").attr("alignment-baseline","middle")
+
+      legend.append("circle").attr("cx",20).attr("cy",200).attr("r", 8).style("fill", "crimson")
+      legend.append("text").attr("x", 40).attr("y", 200).text("8").style("font-size", "15px").attr("alignment-baseline","middle")
+
+      legend.append("circle").attr("cx",20).attr("cy",230).attr("r", 9).style("fill", "crimson")
+      legend.append("text").attr("x", 40).attr("y", 230).text("9").style("font-size", "15px").attr("alignment-baseline","middle")
+
+      legend.append("circle").attr("cx",20).attr("cy",260).attr("r", 10).style("fill", "crimson")
+      legend.append("text").attr("x", 40).attr("y", 260).text("10").style("font-size", "15px").attr("alignment-baseline","middle")
+
+    //add tooltip for gtd circles
+    var tooltip = svg.append("g")
+        .attr("class", "tooltip")
+        .style("display", "none");
+
+    tooltip.append("rect")
+        .attr("width", 400)
+        .attr("height", 20)
+        .attr("fill", "white")
+        .attr("transform", "translate(-200,-23)")
+        .style("opacity", 0.7);
+
+    tooltip.append("text")
+        .attr("x", 0)
+        .attr("dy", -10)
+        .style("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("font-weight", "bold");
+
+    svg.append("rect")
+        .attr("width", 600)
+        .attr("height", 85)
+        .attr("fill", "white")
+        .attr("transform", "translate( 295, -10)")
+        .style("opacity", 0.7);
+
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", 50 - (margin.top / 2))
+        .attr("text-anchor", "middle")
+        .style("fill", "crimson")
+        .style("font-size", "1.5em")
+        .style("margin-top", "1em")
+        .style("margin-bottom", "1em")
+        .style("font-weight", "bold")
+        .text("Earthquake Efects");
+
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", 75 - (margin.top / 2))
+        .attr("text-anchor", "middle")
+        .style("fill", "black")
+        .style("font-size", "1em")
+        .style("margin-top", "1em")
+        .style("margin-bottom", "1em")
+        .style("font-weight", "bold")
+        .text("Point to a circle to see additional details.");
+}
+
+</script>
