@@ -1,1 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Magnitude Frequency Map</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
+    <link href="assets/style.css" rel="stylesheet" />
+</head>
+<body>
+<style type="text/css">
+	body{
+	 background-color:#FFF!important;
+	}
+	* {
+      font-family: "Helvetica Neue";
+    }
+    p {
+      font-size: 0.85em;
+    }
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: none;
+      shape-rendering: crispEdges;
+    }
+    .browser text {
+      text-anchor: end;
+    }
+    svg {
+      background: white;
+    }
+    .country {
+      fill: #f6f6f6;
+      stroke: #333333;
+      stroke-width: 0.5;
+    }
+    .tooltip {
+      position: absolute;
+      text-align: center;
+      width: 400px;
+      height: 20px;
+      padding: 2px;
+      font: 12px sans-serif;
+      background: white;
+      border: 0px;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+    .gtd-label {
+      font-size: 10px;
+    }
+	
+	.axis path,
+    .axis line {
+      fill: none;
+      stroke: none;
+      shape-rendering: crispEdges;
+    }
+    .browser text {
+      text-anchor: end;
+    }
+    svg {
+      background: white;
+    }
+    .country {
+      fill: #f6f6f6;
+      stroke: #333333;
+      stroke-width: 0.5;
+    }
+    .tooltip {
+      position: absolute;
+      text-align: center;
+      width: 400px;
+      height: 20px;
+      padding: 2px;
+      font: 12px sans-serif;
+      background: white;
+      border: 0px;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+    .gtd-label {
+      font-size: 10px;
+    }
+	
+  dt {
+  	font-weight: bold;
+    color: crimson;
+    font-size: 2em;
+  }
+  dd {
+	font-weight: bold;
+    color: crimson;
+    padding-bottom: 3px;
+    font-size: 12px;
+  }
+</style>
+	
+
+    <ul>
+        <li>
+            <span class="title">
+                2008 – Present world Earthquake occurrences
+            </span>
+        </li>
+        <li><a class="active" href="index.html">Home</a></li>
+        <li><a href="animated-map.html">Animated Map</a></li>
+        <li><a href="overview.html">Overview Map</a></li>
+        <li><a href="top-three-countries.html">Top Three Countries</a></li>
+        <li><a href="effects.html">Effects Map</a></li>	    
+        <li><a href="about.html">About</a></li>
+    </ul>
+<div>
+  <dl>
+    <dt>Hybrid structure</dt>
+    <dd>
+      <p id="p01">
+    The <b>hybrid structure</b> selected for this visualization is
+    <b>Interactive slide show</b> with the following narrated slides:
+    <ol>
+      <li id="li01">Animated map</li>
+      <li id="li01">Where in the world have terrorists attacked?</li>
+      <li id="li01">Who are they targeting?</li>
+      <li id="li01">How do they attack?</li>
+
+    </ol>
+    Interaction is incorporated within each slide, as described in the triggers section below.
+    This structure allows the user to further explore particular points of
+    the presentation before moving ahead to the next slide.
+    The interactive slideshow balances the author-driven (explanatory)
+    and the user-driven (exploratory) approaches.
+    Each individual slide communicates the author's message then
+    prompts the user to interact with the display.
+    This structure allowed me to walk the user through data-dimensions
+    and step-by-step.
+    The navigation bar at the bottom of the visualization ensures that
+    the user only moves forward in the presentation when he is ready to do so,
+    (requires the user to click), allows the user to go back to slides if desired,
+    and clearly shows the presentation contents and location within the presentation.
+
+    </p>
+  </dd>
+
+    <dt>Scenes</dt>
+    <dd>
+      <p id="p01">
+      Layout and design of the <b><u>scenes</u></b> - Each scene is represented
+      by one chart on one slide. The presentation starts with overall view of
+      the data on the animated map, to demonstrate the spread of terrorist
+      attacks around the world over the past 45 years. It then continues with
+      a slide that shows the amount of attacks in each country, and the user
+      can look at the details on demand (tooltip). The next 2 slides focus on
+      the targets of terrorist attacks, and what methods are used to carry
+      them out. These add 2 other dimensions of the data to provide depth to
+      the information provided previously. The presentation follows this order
+      to best convey the message that terrorist attacks are spreading and are
+      getting worse. The scenes are structured to go from high level to detailed,
+      the design is consistent in terms of style (font, colors, and layout).
+      All slides have the same navigation bar at the bottom to keep the user
+      oriented, so the current location in the presentation is clearly marked
+      using the same color scheme.
+      </p>
+    </dd>
+
+    <dt>Annotations</dt>
+    <dd>
+      <p id="p01">
+      Application of the <b><u>annotations</u></b> - Text annotations explain
+      the data presented on the screen. The visualization highlights specific
+      data items or trends – color density and circles area on the maps
+      highlight the locations o=in the world where terrorist attacks are most
+      common. Circle color scale in conjunction with time scale demonstrate
+      the growth trend over time. The animated map is using the enter() and
+      transition() template to add the data points to the screen with 0 opacity
+      (transparent), then transition them into visible opacity one at a time
+      to create the animation. All tooltips are displayed on mouseover(),
+      mousemove() and removed on mouseout() to show data on-demand. All
+      elements follow a template for visual consistency.
+      </p>
+    </dd>
+
+    <dt>Parameters</dt>
+    <dd>
+      <p id="p01">
+    The <b><u>parameters</u></b> - Data variables are converted into color,
+    shape, size, location, and time using functions and scales to form the
+    visualizations. On the maps, projection functions are used to convert
+    latitude and longitude data into 2D map coordinates. The mouse position
+    on the screen is tracked to form the interactive user experience, and
+    place the tooltip for the object pointed to. The animated map has a time
+    parameter that controls the pacing and appearance of data points on the screen.
+    </p>
+  </dd>
+
+    <dt>Triggers</dt>
+    <dd>
+      <p id="p01">
+    The <b><u>triggers</u></b> and User Interface events - On the animated map,
+    when the user clicks the “watch again” button, it triggers a screen refresh,
+    and the animation restarts.
+    A timer parameter is used to pace the data points appearance on the screen.
+    The button is clearly visible on the screen.
+    On the other slides, the user can hover over the circles to see a tooltip
+    with additional information. The mouse position on the screen corresponds
+    to the circle and the data related to it is being displayed.
+    The text annotation on top of each slide prompts the user to try it.
+    The navigation bar at the bottom of the screen highlights the current page
+    in crimson, attracting attention, and the other items on the bar hint there
+    are additional pages hidden. Once the user hovers over the additional items,
+    the mouse changes shape as well to prompt a click to reveal them.
+    </p>
+  </dd>
+
+  </dl>
+</div>
+</body>
+</html>
